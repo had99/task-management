@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { axiosBaseQuery } from '@/lib/axiosBaseQuery'
-import type { Task, CreateTaskDto, UpdateTaskDto } from '@/types'
+import type { Task, Attachment, CreateTaskDto, UpdateTaskDto } from '@/types'
 
 export const tasksApi = createApi({
   reducerPath: 'tasksApi',
@@ -59,6 +59,31 @@ export const tasksApi = createApi({
         { type: 'Task' as const, id: `LIST-${projectId}` },
       ],
     }),
+
+    uploadAttachment: builder.mutation<Attachment, { taskId: string; file: File }>({
+      query: ({ taskId, file }) => {
+        const data = new FormData()
+        data.append('file', file)
+        return { url: `/tasks/${taskId}/attachments`, method: 'post', data }
+      },
+      invalidatesTags: (_result, _error, { taskId }) => [
+        { type: 'Task' as const, id: taskId },
+      ],
+    }),
+
+    deleteAttachment: builder.mutation<
+      void,
+      { taskId: string; attachmentId: string; projectId: string }
+    >({
+      query: ({ taskId, attachmentId }) => ({
+        url: `/tasks/${taskId}/attachments/${attachmentId}`,
+        method: 'delete',
+      }),
+      invalidatesTags: (_result, _error, { taskId, projectId }) => [
+        { type: 'Task' as const, id: taskId },
+        { type: 'Task' as const, id: `LIST-${projectId}` },
+      ],
+    }),
   }),
 })
 
@@ -67,4 +92,6 @@ export const {
   useCreateTaskMutation,
   useUpdateTaskMutation,
   useDeleteTaskMutation,
+  useUploadAttachmentMutation,
+  useDeleteAttachmentMutation,
 } = tasksApi

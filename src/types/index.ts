@@ -15,6 +15,15 @@ export interface Project {
   createdAt: string
 }
 
+export interface Attachment {
+  id: string
+  name: string
+  size: number
+  mimeType: string
+  url: string
+  uploadedAt: string
+}
+
 export interface Task {
   id: string
   title: string
@@ -22,6 +31,7 @@ export interface Task {
   status: TaskStatus
   assignee: User | null
   projectId: string
+  attachments?: Attachment[]
   createdAt: string
   updatedAt: string
 }

@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw'
-import type { Project, Task, User, CreateTaskDto, UpdateTaskDto } from '@/types'
+import type { Project, Task, User, Attachment, CreateTaskDto, UpdateTaskDto } from '@/types'
 
 // --- SEED DATA ---
 
@@ -43,12 +43,13 @@ let mockTasks: Task[] = [
 ]
 
 let taskIdCounter = 19
+let attachmentIdCounter = 1
 
 const findUser = (id?: string): User | null =>
   id ? (mockUsers.find(u => u.id === id) ?? null) : null
 
 export const handlers = [
-  // POST /api/auth/login — bất kỳ email/password đều thành công
+  // POST /api/auth/login
   http.post('/api/auth/login', async () => {
     await delay(300)
     return HttpResponse.json({
@@ -81,6 +82,7 @@ export const handlers = [
       status: body.status,
       assignee: findUser(body.assigneeId),
       projectId: body.projectId,
+      attachments: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -119,6 +121,38 @@ export const handlers = [
     const [removed] = mockTasks.splice(index, 1)
     const project = mockProjects.find(p => p.id === removed.projectId)
     if (project) project.taskCount = Math.max(0, project.taskCount - 1)
+    return new HttpResponse(null, { status: 204 })
+  }),
+
+  // POST /api/tasks/:id/attachments
+  http.post('/api/tasks/:id/attachments', async ({ params, request }) => {
+    await delay(400)
+    const formData = await request.formData()
+    const file = formData.get('file') as File
+    const attachment: Attachment = {
+      id: `att-${attachmentIdCounter++}`,
+      name: file.name,
+      size: file.size,
+      mimeType: file.type,
+      url: URL.createObjectURL(file),
+      uploadedAt: new Date().toISOString(),
+    }
+    const task = mockTasks.find(t => t.id === params.id)
+    if (!task) {
+      return HttpResponse.json({ message: 'Task not found' }, { status: 404 })
+    }
+    task.attachments = [...(task.attachments ?? []), attachment]
+    return HttpResponse.json(attachment, { status: 201 })
+  }),
+
+  // DELETE /api/tasks/:id/attachments/:attachmentId
+  http.delete('/api/tasks/:id/attachments/:attachmentId', async ({ params }) => {
+    await delay(200)
+    const task = mockTasks.find(t => t.id === params.id)
+    if (!task) {
+      return HttpResponse.json({ message: 'Task not found' }, { status: 404 })
+    }
+    task.attachments = (task.attachments ?? []).filter(a => a.id !== params.attachmentId)
     return new HttpResponse(null, { status: 204 })
   }),
 ]

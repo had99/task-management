@@ -3,6 +3,8 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { TaskBoard } from '@/features/tasks/TaskBoard'
+import { TasksPage } from '@/features/tasks/TasksPage'
+import { TaskFormPage } from '@/features/tasks/TaskFormPage'
 
 export const router = createBrowserRouter([
   {
@@ -17,6 +19,9 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { path: '/dashboard', element: <TaskBoard /> },
+          { path: '/dashboard/tasks', element: <TasksPage /> },
+          { path: '/dashboard/tasks/new', element: <TaskFormPage /> },
+          { path: '/dashboard/tasks/:id/edit', element: <TaskFormPage /> },
           { path: '/', element: <TaskBoard /> },
         ],
       },
